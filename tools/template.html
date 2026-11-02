@@ -91,6 +91,7 @@
     <div style="margin-top:12px">
       <label style="font-size:11px;color:var(--dim)">打击部位</label>
       <div class="chips" id="parts"></div>
+      <div class="note" id="partNote"></div>
     </div>
   </div>
 
@@ -242,6 +243,22 @@ function fillMonsterSelect(){
   if (sel.options.length) sel.value = state.monster.slug;
 }
 
+function partNote(name){
+  if (!name) return '';
+  if (name.indexOf('（破坏）') >= 0) return '部位破坏后的肉质，数值与破坏前不同';
+  if (name.indexOf('（软化）') >= 0) return '钩爪软化后的肉质，数值比软化前高';
+  if (/[①②③④⑤]$/.test(name)) return '源数据中的同名重复行：①是页面上先出现的那组，②是另一组；Kiranico 没有标注具体状态';
+  if (name.indexOf('（') >= 0) return '括号内是该部位的状态或形态';
+  return '';
+}
+function updatePartNote(){
+  const el = document.getElementById('partNote');
+  if (!el) return;
+  const m = state.monster;
+  const p = m && m.parts[state.partIdx];
+  el.textContent = p ? partNote(p.part) : '';
+}
+
 function renderParts(){
   const box = $('parts'); box.innerHTML = '';
   const m = state.monster;
@@ -250,6 +267,7 @@ function renderParts(){
     d.className = 'chip' + (i===state.partIdx ? ' on' : '');
     const z = p[ATK_TYPE[state.A.weapon]];
     d.textContent = p.part + (z>=45 ? ' ★' : '');
+    d.title = partNote(p.part);
     d.onclick = ()=>{ state.partIdx = i; renderParts(); renderMonsterTable(); renderResult(); };
     box.appendChild(d);
   });
@@ -315,6 +333,7 @@ function renderBuild(side){
 
 /* ---------- 渲染：结果 ---------- */
 function renderResult(){
+  updatePartNote();
   const m = state.monster;
   const part = m.parts[state.partIdx];
   if (!part) return;
